@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vector · Behavioral Career Pivot Engine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="vector_data.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0f4f8 0%, #e9eef5 100%);
+            color: #1a2a3a;
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #3b82f6; border-radius: 10px; }
+
+        Event Logger
+        .event-logger {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 340px;
+            background: rgba(10, 30, 47, 0.95);
+            backdrop-filter: blur(12px);
+            color: #e2f0fa;
+            border-radius: 20px;
+            padding: 14px 18px;
+            font-size: 11px;
+            font-family: 'SF Mono', monospace;
+            z-index: 1000;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.3);
+            border-left: 3px solid #3b82f6;
+            pointer-events: none;
+        }
+        .event-logger .log-header { font-weight: 600; margin-bottom: 8px; font-size: 12px; display: flex; align-items: center; gap: 8px; }
+        .event-logger .close-log { position: absolute; right: 12px; top: 10px; cursor: pointer; font-size: 14px; pointer-events: auto; opacity: 0.7; }
+        #logMessages { font-size: 10px; line-height: 1.4; opacity: 0.9; }
+
+        /* Navigation */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 5%;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .logo-icon {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, #1e3a5f, #3b82f6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .logo-icon i { color: white; font-size: 20px; }
+        .logo-text {
+            font-weight: 800;
+            font-size: 1.6rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #0f2b3d, #2563eb);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .logo-text span { font-weight: 300; color: #3b82f6; background: none; }
+        .nav-links { display: flex; gap: 32px; }
+        .nav-links a {
+            text-decoration: none;
+            color: #334155;
+            font-weight: 500;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+        .nav-links a:hover, .nav-links a.active { color: #2563eb; }
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f1f5f9;
+            padding: 8px 16px;
+            border-radius: 40px;
+        }
+        .user-avatar {
+            width: 32px; height: 32px;
+            background: linear-gradient(135deg, #3b82f6, #1e40af);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 28px 5%; }
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #0f2b3d 0%, #1a4a6e 100%);
+            border-radius: 32px;
+            padding: 40px 48px;
+            margin-bottom: 48px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%; right: -20%;
+            width: 60%; height: 200%;
+            background: radial-gradient(circle, rgba(59,130,246,0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .hero h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 12px; letter-spacing: -0.02em; }
+        .hero p { font-size: 1rem; opacity: 0.85; max-width: 600px; margin-bottom: 24px; }
+        .skill-tags { display: flex; gap: 12px; flex-wrap: wrap; }
+        .skill-tag {
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(4px);
+            padding: 6px 14px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+        }
+
+        .section-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 24px; flex-wrap: wrap; }
+        .section-title { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; background: linear-gradient(135deg, #1a2a3a, #2563eb); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .section-subtitle { color: #5b6e8c; font-size: 0.9rem; margin-top: 4px; }
+
+        /* Job Cards */
+        .jobs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; margin-bottom: 48px; }
+        .job-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            border: 1px solid #e9edf2;
+            transition: all 0.25s ease;
+            overflow: hidden;
+        }
+        .job-card:hover { transform: translateY(-6px); box-shadow: 0 20px 30px -12px rgba(0,0,0,0.12); border-color: #cbd5e1; }
+        .card-header { background: linear-gradient(135deg, #f8fafc, #ffffff); padding: 18px 20px; border-bottom: 1px solid #eef2f6; }
+        .card-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .job-title-card { font-weight: 700; font-size: 1.2rem; color: #0f2b3d; }
+        .overlap-badge { background: #dbeafe; padding: 4px 10px; border-radius: 40px; font-size: 0.7rem; font-weight: 700; color: #1e40af; }
+        .company-card { color: #5b6e8c; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; }
+        .card-body { padding: 16px 20px; }
+        .match-ring { display: inline-flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 4px 12px; border-radius: 40px; font-size: 0.75rem; font-weight: 600; margin-bottom: 12px; }
+        .explore-btn-card {
+            width: 100%;
+            background: #f8fafc;
+            border: none;
+            padding: 12px;
+            border-radius: 16px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            border-top: 1px solid #eef2f6;
+            margin-top: 12px;
+        }
+        .explore-btn-card:hover { background: #eef2ff; color: #2563eb; }
+
+        /* Modal / Detail Page */
+        .modal-detail {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(12px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .detail-container {
+            background: white;
+            max-width: 1300px;
+            width: 92%;
+            margin: 30px auto;
+            border-radius: 36px;
+            position: relative;
+            padding: 32px 36px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 36px;
+            max-height: 88vh;
+            overflow-y: auto;
+        }
+        .detail-main { flex: 2.5; min-width: 260px; }
+        .detail-sidebar { flex: 1.5; background: linear-gradient(145deg, #f8fafc, #f1f5f9); border-radius: 28px; padding: 24px; position: sticky; top: 20px; align-self: flex-start; }
+        .close-modal { position: absolute; top: 20px; right: 28px; font-size: 28px; cursor: pointer; color: #94a3b8; }
+        .employer-snapshot-card { background: linear-gradient(135deg, #eef2ff, #e0e7ff); border-radius: 20px; padding: 20px; margin: 24px 0; border-left: 4px solid #3b82f6; cursor: pointer; transition: 0.2s; }
+        .vector-similar-card { background: white; border-radius: 20px; padding: 16px; margin-bottom: 14px; cursor: pointer; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; transition: 0.2s; }
+        .vector-similar-card:hover { border-color: #3b82f6; transform: translateX(4px); }
+        .profile-section { background: white; border-radius: 28px; padding: 28px; margin-top: 32px; }
+
+        /* Skill Graph Page */
+        .skill-graph-container { background: white; border-radius: 32px; padding: 32px; margin-bottom: 32px; }
+        .skill-category { margin-bottom: 28px; }
+        .skill-category h3 { margin-bottom: 16px; font-size: 1.1rem; }
+        .skill-bar { background: #e2e8f0; border-radius: 20px; height: 12px; overflow: hidden; margin-bottom: 12px; }
+        .skill-progress { background: linear-gradient(90deg, #3b82f6, #1e40af); height: 100%; border-radius: 20px; width: 0%; }
+        .skill-label { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px; }
+        .behavior-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 32px; }
+        .stat-card { background: #f8fafc; border-radius: 20px; padding: 20px; text-align: center; }
+        .stat-number { font-size: 2rem; font-weight: 800; color: #2563eb; }
+
+        /* Insights Page */
+        .insights-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 32px; }
+        .insight-card { background: white; border-radius: 24px; padding: 24px; border: 1px solid #e9edf2; }
+        .metric-big { font-size: 2.5rem; font-weight: 800; color: #2563eb; }
+        .trend-up { color: #10b981; }
+
+        .footer { text-align: center; padding: 36px; color: #5b6e8c; font-size: 0.8rem; border-top: 1px solid #e2e8f0; margin-top: 48px; }
+        button { cursor: pointer; }
+        @media (max-width: 800px) { .detail-container { flex-direction: column; } .navbar { flex-wrap: wrap; gap: 12px; } }
+    </style>
+</head>
+<body>
+
+<!-- <div class="event-logger" id="eventLogger">
+    <div class="close-log" id="closeLogBtn">✕</div>
+    <div class="log-header"><i class="fas fa-chart-line"></i> IMPLICIT FEEDBACK STREAM</div>
+    <div id="logMessages">— Awaiting user actions —</div>
+</div> -->
+
+<nav class="navbar">
+    <div class="logo" id="logoHomeBtn">
+        <div class="logo-icon"><i class="fas fa-arrow-right"></i></div>
+        <div class="logo-text">VECTOR<span>.</span>pivot</div>
+    </div>
+    <div class="nav-links">
+        <a class="nav-link active" data-page="home">Dashboard</a>
+        <a class="nav-link" data-page="skillGraph">My Skill Graph</a>
+        <a class="nav-link" data-page="insights">Pivot Insights</a>
+    </div>
+    <div class="user-badge">
+        <!-- 头像里的文字我们也加个 ID，让它随 ID 变化 -->
+        <div class="user-avatar" id="dynamicAvatar">JD</div>
+        <div style="display: flex; flex-direction: column;">
+            <input type="number" id="userIdInput" value="802" 
+                style="border:none; background:transparent; font-weight:700; width:80px; outline:none; color:#2563eb; font-size:1rem;"
+                title="Type User ID and press Enter">
+            <span style="font-size: 0.7rem; color:#64748b;">Enter ID to Pivot</span>
+        </div>
+    </div>
+</nav>
+
+<div class="container">
+    <!-- PAGE 1: HOME (完整版) -->
+    <div id="homePage" class="page active">
+        <div class="hero">
+            <h1>Your next bridge role is waiting.</h1>
+            <p>Vector's Skill Adjacency Graph maps your behavioral signals to career transition opportunities — from operations to product, from sales to growth.</p>
+            <div class="skill-tags">
+                <span class="skill-tag">🔍 87% Skill Match</span>
+                <span class="skill-tag">🧠 12 Pivot Paths</span>
+                <span class="skill-tag">⚡ 3 High-Confidence Bridges</span>
+            </div>
+        </div>
+
+        <div class="section-header">
+            <div>
+                <div class="section-title">✨ Personalized Feed</div>
+                <div class="section-subtitle">Curated by Vector's collaborative filtering engine</div>
+            </div>
+            <div style="background:#eef2ff; padding:6px 14px; border-radius:40px; font-size:0.8rem;"><i class="fas fa-code-branch"></i> k=5 · time decay active</div>
+        </div>
+        <div class="jobs-grid" id="jobsGrid"></div>
+
+        <div class="section-header" style="margin-top: 16px;">
+            <div>
+                <div class="section-title">🔥 Trending Pivot Paths</div>
+                <div class="section-subtitle">High-velocity transitions from the Vector community</div>
+            </div>
+        </div>
+        <div class="jobs-grid" id="trendingGrid"></div>
+
+        <div class="profile-section">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap:wrap;">
+                <div><h3 style="font-size:1.3rem;"><i class="fas fa-chart-simple"></i> Your Behavioral Profile</h3><p style="color:#5b6e8c;">Based on implicit ratings (browse:1, deep-read:4, employer-view:2, similar-clicks:5)</p></div>
+                <div><span class="overlap-badge" style="background:#d1fae5; color:#065f46;"><i class="fas fa-chart-line"></i> 98% Coverage · Active</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE 2: MY SKILL GRAPH -->
+    <div id="skillGraphPage" class="page">
+        <div class="section-header">
+            <div>
+                <div class="section-title">🧠 My Skill Adjacency Graph</div>
+                <div class="section-subtitle">Your transferable skills mapped to bridge roles</div>
+            </div>
+        </div>
+        <div class="skill-graph-container">
+            <h2 style="margin-bottom: 24px;">Current Skill Profile</h2>
+            <div class="skill-category">
+                <div class="skill-label"><span>📊 Data Analysis</span><span>78%</span></div>
+                <div class="skill-bar"><div class="skill-progress" style="width: 78%;"></div></div>
+                <div class="skill-label"><span>📈 Product Strategy</span><span>65%</span></div>
+                <div class="skill-bar"><div class="skill-progress" style="width: 65%;"></div></div>
+                <div class="skill-label"><span>🤝 Cross-functional Leadership</span><span>82%</span></div>
+                <div class="skill-bar"><div class="skill-progress" style="width: 82%;"></div></div>
+                <div class="skill-label"><span>💻 Technical Communication</span><span>71%</span></div>
+                <div class="skill-bar"><div class="skill-progress" style="width: 71%;"></div></div>
+                <div class="skill-label"><span>🚀 Growth Experimentation</span><span>59%</span></div>
+                <div class="skill-bar"><div class="skill-progress" style="width: 59%;"></div></div>
+            </div>
+            <h2 style="margin: 32px 0 16px;">Your Implicit Feedback Summary</h2>
+            <div class="behavior-stats">
+                <div class="stat-card"><div class="stat-number" id="val-summary">0</div><div>Browse (1pt)</div></div>
+                <div class="stat-card"><div class="stat-number" id="val-detail">0</div><div>Deep Read (4pts)</div></div>
+                <div class="stat-card"><div class="stat-number" id="val-employer">0</div><div>Employer View (2pts)</div></div>
+                <div class="stat-card"><div class="stat-number" id="val-similar">0</div><div>Similar Click (5pts)</div></div>
+            </div>
+            <div style="background: #eef2ff; border-radius: 20px; padding: 20px; margin-top: 24px;">
+                <strong><i class="fas fa-lightbulb"></i> Vector's Insight:</strong> Your highest engagement is with Product & Growth roles. Consider focusing on "Product Operations Manager" as a bridge role.
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE 3: PIVOT INSIGHTS -->
+    <div id="pivotInsightsPage" class="page">
+        <div class="section-header">
+            <div>
+                <div class="section-title">📊 Pivot Insights & Metrics</div>
+                <div class="section-subtitle">Powered by our collaborative filtering engine</div>
+            </div>
+        </div>
+        <div class="insights-grid">
+            <div class="insight-card"><div class="metric-big" id="val-sparsity">0%</div><div style="font-weight: 600;">Matrix Sparsity</div>...</div>
+            <div class="insight-card"><div class="metric-big" id="val-usercov">0%</div><div style="font-weight: 600;">User Coverage</div>...</div>
+            <div class="insight-card"><div class="metric-big" id="val-catcov">0%</div><div style="font-weight: 600;">Catalogue Coverage</div>...</div>
+        </div>
+        <div class="skill-graph-container">
+            <h3>📈 k-Parameter Tuning Results</h3>
+            <p style="margin-bottom: 20px;">User Coverage vs. Neighborhood Size (k)</p>
+            <div style="background: #f1f5f9; border-radius: 20px; padding: 20px;">
+                <!-- 只留这个 ID，里面原本的 5 个 flex 块全部删掉 -->
+                <div id="dynamic-tuning-chart" style="display: flex; align-items: flex-end; gap: 12px; height: 200px; margin-bottom: 16px;">
+                </div>
+                <p id="tuning-note" style="font-size: 13px; color: #475569;"></p>
+            </div>
+        </div>
+        <div class="insights-grid">
+            <div class="insight-card"><div style="font-weight: 700; margin-bottom: 12px;">🎯 Top Bridge Roles (This Week)</div><div>1. Product Operations Manager <span class="trend-up">↑92%</span></div><div>2. Growth Hacker <span class="trend-up">↑89%</span></div><div>3. Data Analyst <span class="trend-up">↑76%</span></div><div>4. Customer Success Engineer <span class="trend-up">↑81%</span></div></div>
+            <div class="insight-card"><div style="font-weight: 700; margin-bottom: 12px;">⚡ Implicit Weighting Scheme</div><div>Browse / Summary → <strong>1 point</strong></div><div>Deep Read (Gap Analysis) → <strong>4 points</strong></div><div>Employer Snapshot → <strong>2 points</strong></div><div>Similar Position Click → <strong>5 points</strong></div><div style="margin-top: 12px; font-size: 12px;">Rationale: Higher weight = stronger pivot intent signal.</div></div>
+        </div>
+    </div>
+</div>
+
+<div class="footer">
+    Vector · Behavioral Career Pivot Engine | Powered by Skill Adjacency & Collaborative Filtering
+</div>
+
+<!-- Job Detail Modal -->
+<div id="jobDetailModal" class="modal-detail">
+    <div class="detail-container">
+        <span class="close-modal" id="closeModalBtn">&times;</span>
+        <div class="detail-main" id="detailMainContent"></div>
+        <div class="detail-sidebar" id="detailSidebar"></div>
+    </div>
+</div>
+
+<script>
+    // ========== 1. 数据初始化 (CTO INTERFACE - MEMBER 4) ==========
+    let JOB_CATALOG = VECTOR_DATA.JOB_CATALOG;
+    let MOCK_RECOMMENDATIONS = VECTOR_DATA.MOCK_RECOMMENDATIONS;
+    
+    // 图片要求点 4：根据 EDA 统计替换为真实热门职位 ID
+    const TRENDING_IDS = [106, 107]; 
+    
+    // 图片要求点 2：更改为任意测试用户 ID
+    let CURRENT_USER_ID = 802;
+    function getJobCatalog() { return (typeof VECTOR_DATA !== 'undefined') ? VECTOR_DATA.JOB_CATALOG : {}; }
+    function getMockRecs() { return (typeof VECTOR_DATA !== 'undefined') ? VECTOR_DATA.MOCK_RECOMMENDATIONS : {}; }
+
+    // ========== 2. 动态数据注入 (数值同步) ==========
+    function injectDynamicData() {
+        if (typeof VECTOR_DATA === 'undefined') return;
+
+        // 1. 填充 Page 2 行为统计
+        const stats = VECTOR_DATA.USER_BEHAVIOR_SUMMARY[CURRENT_USER_ID] || {summary:0, detail_description:0, view_employer_profile:0, view_similar_positions:0};
+        document.getElementById('val-summary').innerText = stats.summary;
+        document.getElementById('val-detail').innerText = stats.detail_description;
+        document.getElementById('val-employer').innerText = stats.view_employer_profile;
+        document.getElementById('val-similar').innerText = stats.view_similar_positions;
+
+        // 2. 填充 Page 3 指标
+        const m = VECTOR_DATA.METRICS;
+        document.getElementById('val-sparsity').innerText = m.sparsity;
+        document.getElementById('val-usercov').innerText = m.user_coverage;
+        document.getElementById('val-catcov').innerText = m.catalog_coverage;
+
+        // 3. 动态画柱状图
+        const chart = document.getElementById('dynamic-tuning-chart');
+        chart.innerHTML = ''; // 清空
+        VECTOR_DATA.TUNING_DATA.forEach(d => {
+            const barDiv = document.createElement('div');
+            barDiv.style.cssText = `flex:1; text-align: center;`;
+            
+            // 计算高度：假设 100% 对应 180px
+            const h = d.Catalog_Coverage * 180;
+            const color = d.k === 15 ? '#2563eb' : '#3b82f6';
+            
+            barDiv.innerHTML = `
+                <div style="background: ${color}; height: ${h}px; border-radius: 8px; margin-bottom: 8px;"></div>
+                <span style="font-size:12px;">k=${d.k}</span>
+            `;
+            chart.appendChild(barDiv);
+        });
+        
+        document.getElementById('tuning-note').innerText = `📌 Optimal at k=15. Target User: ${CURRENT_USER_ID}`;
+    }
+
+    // ========== 3. 核心渲染逻辑 (修复缺失函数) ==========
+    
+    // 图片要求点 5：模拟真实的 CF 推荐逻辑
+    function getRecommendationsForUser(userId) { 
+        // 实际应用中这里会调用后端 API 或复杂的矩阵运算
+        return MOCK_RECOMMENDATIONS[userId] || [101, 102, 103]; 
+    }
+
+    function createJobCard(id, job, isTrending) {
+        const card = document.createElement('div');
+        card.className = 'job-card';
+        card.innerHTML = `
+            <div class="card-header">
+                <div class="card-title-row">
+                    <span class="job-title-card">${job.title}</span>
+                    <span class="overlap-badge">${isTrending ? '🔥 Trending' : job.overlap + '% Match'}</span>
+                </div>
+                <div class="company-card"><i class="fas fa-building"></i> ${job.company}</div>
+            </div>
+            <div class="card-body">
+                <div class="match-ring"><i class="fas fa-bullseye"></i> Pivot Confidence: ${job.pivot_index}%</div>
+                <p style="font-size: 0.85rem; color: #5b6e8c; margin-bottom: 12px; height: 3em; overflow: hidden;">
+                    ${job.primitives.substring(0, 80)}...
+                </p>
+                <button class="explore-btn-card" onclick="openJobDetail(${id})">Explore Path <i class="fas fa-arrow-right"></i></button>
+            </div>
+        `;
+        // 绑定 IntersectionObserver 进行隐式行为记录 (1分)
+        attachCardObserver(card, id, job.title);
+        return card;
+    }
+
+    function renderHome() {
+        const grid = document.getElementById('jobsGrid');
+        const trendingGrid = document.getElementById('trendingGrid');
+        if (!grid || !trendingGrid) return;
+        
+        grid.innerHTML = ''; 
+        trendingGrid.innerHTML = '';
+        
+        // 渲染推荐位 (基于 CF 输出)
+        const recIds = getRecommendationsForUser(CURRENT_USER_ID);
+        recIds.forEach(id => {
+            const job = JOB_CATALOG[id];
+            if(job) grid.appendChild(createJobCard(id, job, false));
+        });
+
+        // 渲染热门路径 (基于 EDA 指定 ID)
+        TRENDING_IDS.forEach(id => {
+            const job = JOB_CATALOG[id];
+            if(job) trendingGrid.appendChild(createJobCard(id, job, true));
+        });
+    }
+
+    // ========== 4. 隐式行为记录器 (IMPLICIT FEEDBACK) ==========
+    // 商业逻辑：根据用户意图强弱分配权重
+    // summary: 宽泛浏览 (1pt)
+    // view_employer_profile: 考察企业文化，展示转型严肃性 (2pt)
+    // detail_description: 深入研究技能缺口，核心转型信号 (4pt)
+    // view_similar_positions: 跨节点探索，算法相关性确认 (5pt)
+    function logImplicit(action, score, itemId, detail) {
+        const time = new Date().toLocaleTimeString();
+        const logDiv = document.getElementById('logMessages');
+        if (!logDiv) return;
+        const newEntry = `→ [${time}] ${action} | +${score}pts | ${detail}`;
+        const current = logDiv.innerHTML === '— Awaiting user actions —' ? newEntry : newEntry + '<br>' + logDiv.innerHTML;
+        logDiv.innerHTML = current.substring(0, 1500); // 限制显示长度
+        console.log(`[VECTOR LOG] Action: ${action}, Item: ${itemId}, Score: ${score}`);
+    }
+    
+    function attachCardObserver(card, itemId, title) {
+        let timer = null;
+        const obs = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting) { 
+                timer = setTimeout(() => logImplicit('summary (browse card)', 1, itemId, `Viewed ${title} card >2s`), 2000); 
+            } else { 
+                if (timer) clearTimeout(timer); 
+            }
+        }, { threshold: 0.6 });
+        obs.observe(card);
+    }
+
+    // ========== 5. 交互与详情页逻辑 ==========
+    function openJobDetail(itemId) {
+        const job = JOB_CATALOG[itemId]; 
+        if (!job) return;
+        const modal = document.getElementById('jobDetailModal');
+        const main = document.getElementById('detailMainContent');
+        const side = document.getElementById('detailSidebar');
+
+        main.innerHTML = `
+            <h2 style="font-size:28px;">${job.title}</h2>
+            <div style="color:#5b6e8c; margin-bottom:16px;"><i class="fas fa-building"></i> ${job.company} · Bridge Role</div>
+            <div id="readBlock">
+                <h3>📋 Required Primitives (Skill Adjacency)</h3><p>${job.primitives}</p>
+                <h3>⚠️ Primary Challenges for Pivoters</h3><p>${job.challenges}</p>
+                <h3>🎯 Operational Responsibilities</h3><p>${job.responsibilities}</p>
+            </div>
+            <div id="empSnapshot" class="employer-snapshot-card">
+                <strong><i class="fas fa-shield-alt"></i> Employer Snapshot · Culture Screening</strong><br>
+                🏢 Pivot Friendliness Index: ${job.pivot_index}%<br>
+                ${job.employer_note}<br>
+                <span style="font-size:11px; color:#3b82f6;">🔍 Click/hover to trigger 'view_employer_profile' (2pts)</span>
+            </div>`;
+
+        side.innerHTML = `
+            <div style="font-weight:800; font-size:1.3rem; margin-bottom:12px;"><i class="fas fa-code-branch"></i> Vector Engine</div>
+            <p>Users who explored <strong>${job.title}</strong> also found overlap with:</p>
+            <div id="similarList"></div>`;
+        
+        // 详情阅读触发 (4分)
+        const readDiv = document.getElementById('readBlock');
+        let readFlag = false;
+        const obsRead = new IntersectionObserver((e) => { 
+            if(e[0].isIntersecting && !readFlag) { 
+                readFlag = true; 
+                logImplicit('detail_description (gap analysis)', 4, itemId, `Deep read of ${job.title}`); 
+                obsRead.disconnect(); 
+            } 
+        }, { threshold: 0.4 });
+        if(readDiv) obsRead.observe(readDiv);
+        
+        // 雇主报告查看触发 (2分)
+        const empDiv = document.getElementById('empSnapshot');
+        empDiv.onclick = () => logImplicit('view_employer_profile', 2, itemId, `Viewed ${job.company} culture report`);
+        
+        // 相似职位推荐触发 (5分)
+        const similarList = document.getElementById('similarList');
+        const others = Object.keys(JOB_CATALOG).filter(id => id != itemId).slice(0, 3);
+        others.forEach(simId => {
+            const simJob = JOB_CATALOG[simId];
+            const div = document.createElement('div'); 
+            div.className = 'vector-similar-card';
+            div.innerHTML = `<div><strong>${simJob.title}</strong><br><span style="font-size:12px;">${simJob.company}</span></div><span class="overlap-badge">${simJob.overlap}%</span>`;
+            div.onclick = () => {
+                logImplicit('view_similar_positions', 5, parseInt(simId), `Jumped to ${simJob.title}`);
+                openJobDetail(parseInt(simId));
+            };
+            similarList.appendChild(div);
+        });
+        
+        modal.style.display = 'flex';
+    }
+
+    // ========== 6. 导航与初始化 ==========
+    function switchPage(pageName) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        
+        // 关键：统一转换为小写进行匹配，或者手动适配大小写
+        let targetId = pageName + 'Page';
+        if (pageName === 'skillgraph') targetId = 'skillGraphPage';
+        if (pageName === 'insights') targetId = 'pivotInsightsPage';
+        
+        const target = document.getElementById(targetId);
+        if(target) target.classList.add('active');
+        
+        const navLink = document.querySelector(`[data-page="${pageName}"]`);
+        if(navLink) navLink.classList.add('active');
+    }
+
+    document.querySelectorAll('.nav-link').forEach(link => {
+        link.onclick = (e) => switchPage(e.currentTarget.getAttribute('data-page'));
+    });
+
+    document.getElementById('logoHomeBtn').onclick = () => switchPage('home');
+    document.getElementById('closeModalBtn').onclick = () => {
+        document.getElementById('jobDetailModal').style.display = 'none';
+    };
+
+    window.onclick = (e) => {
+        if (e.target.className === 'modal-detail') e.target.style.display = 'none';
+    };
+
+    // 页面启动
+    window.onload = function() {
+        injectDynamicData();
+        renderHome();
+        const idInput = document.getElementById('userIdInput');
+        idInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                const newId = parseInt(this.value);
+                
+                // 安全检查：确保 vector_data.js 里真的有这个用户的数据
+                if (VECTOR_DATA.MOCK_RECOMMENDATIONS[newId]) {
+                    CURRENT_USER_ID = newId; // 更新全局变量
+                    
+                    // 更新头像文字 (取 ID 的第一位作为 Initial)
+                    document.getElementById('dynamicAvatar').innerText = newId.toString().substring(0, 2);
+                    
+                    // 核心：触发重新渲染
+                    injectDynamicData(); // 刷新 Page 2 & 3 的数字和图表
+                    renderHome();        // 刷新 Page 1 的职位卡片
+                    
+                    // 弹出一个对投资人友好的反馈
+                    logImplicit('system_recompute', 0, 0, `Switched to User ${newId}. Engine re-calculating adjacencies...`);
+                } else {
+                    alert("User ID not found in Vector Database! Try another one (e.g., 1, 802, 1357).");
+                }
+            }
+        });
+
+    };
+</script>
+</body>
+</html>
